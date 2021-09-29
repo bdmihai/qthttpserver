@@ -117,8 +117,8 @@ class RunFunctionTask<QHttpServerResponse> : public RunFunctionTaskBase<QHttpSer
 public:
     void run() override
     {
-        if (this->isCanceled()) {
-            this->reportFinished();
+        if (this->promise.isCanceled()) {
+            this->promise.reportFinished();
             return;
         }
 #ifndef QT_NO_EXCEPTIONS
@@ -127,13 +127,13 @@ public:
             this->runFunctor();
 #ifndef QT_NO_EXCEPTIONS
         } catch (QException &e) {
-            QFutureInterface<QHttpServerResponse>::reportException(e);
+            this->promise.reportException(e);
         } catch (...) {
-            QFutureInterface<QHttpServerResponse>::reportException(QUnhandledException());
+            this->promise.reportException(QUnhandledException());
         }
 #endif
-        this->reportAndMoveResult(std::move_if_noexcept(result));
-        this->reportFinished();
+        this->promise.reportAndMoveResult(std::move_if_noexcept(result));
+        this->promise.reportFinished();
     }
 
     QHttpServerResponse result{QHttpServerResponse::StatusCode::NotFound};
